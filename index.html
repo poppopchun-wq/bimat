@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>💖 Món Quà Bí Ẩn 💖</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:'Quicksand',sans-serif; background:linear-gradient(160deg,#2a0a1e 0%,#4a1530 50%,#2a0a1e 100%); color:#fff; overflow:hidden; height:100vh; touch-action:none; }
+
+  /* Trái tim bay nền */
+  #heartBg { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+  .floating-heart { position:absolute; bottom:-50px; opacity:0; animation:floatHeart linear infinite; filter:drop-shadow(0 0 10px rgba(255,100,150,.8)); }
+  @keyframes floatHeart { 0%{transform:translateY(0) rotate(0);opacity:0} 10%{opacity:.8} 90%{opacity:.8} 100%{transform:translateY(-110vh) rotate(360deg);opacity:0} }
+
+  /* Màn hình chính */
+  #mainScreen { position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:20px; transition:opacity 0.5s; }
+  .title { font-family:'Dancing Script',cursive; font-size:clamp(32px,8vw,50px); text-shadow:0 0 20px rgba(255,100,150,0.9); margin-bottom:10px; text-align:center; }
+  .subtitle { font-size:16px; color:#ffb3cc; margin-bottom:30px; text-align:center; }
+
+  /* Lưới hộp quà */
+  .gift-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; max-width:350px; width:100%; justify-items:center; }
+  .gift-box { width:100%; aspect-ratio:1; background:rgba(255,255,255,0.1); border:2px solid rgba(255,100,150,0.5); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:all 0.3s; backdrop-filter:blur(5px); }
+  .gift-box.unlocked { border-color:#ff4b8a; box-shadow:0 0 15px rgba(255,75,138,0.6); animation:pulseBox 2s infinite; }
+  .gift-box.locked { opacity:0.5; filter:grayscale(1); cursor:not-allowed; }
+  .gift-icon { font-size:40px; margin-bottom:5px; transition:transform 0.2s; }
+  .gift-box.unlocked:active .gift-icon { transform:scale(1.2); }
+  .gift-label { font-weight:700; font-size:14px; color:#ffb3cc; }
+  @keyframes pulseBox { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+    /* Modal (Bảng câu hỏi) */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity 0.3s; padding:20px; }
+  .modal-overlay.active { opacity:1; pointer-events:auto; }
+  .modal-content { background:linear-gradient(135deg, #3d1a3e, #1a0a1e); border:2px solid #ff4b8a; border-radius:20px; padding:30px 20px; width:100%; max-width:350px; text-align:center; box-shadow:0 0 30px rgba(255,75,138,0.5); transform:scale(0.8); transition:transform 0.3s; }
+  .modal-overlay.active .modal-content { transform:scale(1); }
+  .modal-content h2 { font-family:'Dancing Script',cursive; font-size:28px; color:#00d9ff; margin-bottom:15px; }
+  .modal-content p { font-size:16px; margin-bottom:15px; line-height:1.4; }
+  .modal-content input { width:100%; padding:12px; border-radius:10px; border:1px solid #ff4b8a; background:rgba(255,255,255,0.1); color:#fff; font-size:16px; text-align:center; outline:none; margin-bottom:10px; }
+  .modal-content input:focus { border-color:#00d9ff; }
+  .btn-check, .btn-option { width:100%; padding:12px; margin-top:10px; border:none; border-radius:10px; background:linear-gradient(135deg,#ff4b8a,#ff6ba8); color:#fff; font-size:16px; font-weight:700; cursor:pointer; transition:transform 0.1s; }
+  .btn-check:active, .btn-option:active { transform:scale(0.95); }
+  .error-msg { color:#ff4757; font-size:14px; margin-bottom:10px; display:none; }
+
+  /* Màn hình Hộp 4 */
+  #box4Screen { position:fixed; inset:0; background:linear-gradient(160deg,#1a0a1e 0%,#2a0a1e 50%,#1a0a1e 100%); z-index:200; display:none; flex-direction:column; align-items:center; justify-content:center; padding:30px; text-align:center; }
+  #fireworksCanvas { position:absolute; inset:0; pointer-events:none; z-index:201; }
+  #box4Text { position:relative; z-index:202; font-family:'Dancing Script',cursive; font-size:clamp(24px,6vw,44px); font-weight:700; color:#fff; text-shadow:0 0 20px rgba(255,100,150,0.9), 0 0 40px rgba(255,100,150,0.6); opacity:0; transform:scale(0.9); transition:opacity 0.5s, transform 0.5s; line-height:1.4; max-width:90%; }
+  #box4Text.show { opacity:1; transform:scale(1); }
+  #box4Text.final { animation:finalPulse 1.5s infinite alternate; color:#ffd700; text-shadow:0 0 30px #ffd700, 0 0 60px #ff4b8a; }
+  @keyframes finalPulse { 0%{transform:scale(1)} 100%{transform:scale(1.08)} }
+
+  .btn-start-box4 { display:none; padding:15px 40px; font-size:20px; font-weight:700; border:none; border-radius:50px; background:linear-gradient(135deg,#ff4b8a,#ff6ba8); color:#fff; cursor:pointer; box-shadow:0 0 20px rgba(255,75,138,0.8); z-index:202; position:relative; animation:pulseBox 2s infinite; }
+</style>
+</head>
+<body>
+
+<!-- Nền trái tim bay -->
+<div id="heartBg"></div>
+
+<!-- Màn hình chính: 4 Hộp quà -->
+<div id="mainScreen">
+  <h1 class="title">Món Quà Dành Cho Em</h1>
+  <p class="subtitle">Hãy mở từng hộp quà để khám phá nhé!</p>
+  
+  <div class="gift-grid">
+    <div class="gift-box unlocked" id="box1" onclick="openModal(1)">
+      <div class="gift-icon">🎁</div>
+      <div class="gift-label">Hộp 1</div>
+    </div>
+    <div class="gift-box locked" id="box2">
+      <div class="gift-icon">🔒</div>
+      <div class="gift-label">Hộp 2</div>
+    </div>
+    <div class="gift-box locked" id="box3">
+      <div class="gift-icon">🔒</div>
+      <div class="gift-label">Hộp 3</div>
+    </div>
+    <div class="gift-box locked" id="box4">
+      <div class="gift-icon">🔒</div>
+      <div class="gift-label">Hộp 4</div>
+    </div>
+  </div>
+</div>
+
+<!-- Các Modal (Bảng câu hỏi) -->
+<div class="modal-overlay" id="modal1">
+  <div class="modal-content">
+    <h2>Câu hỏi hộp 1</h2>
+    <p>Chồng em là ai tên gì?</p>
+    <input type="text" id="input1" placeholder="Điền tên vào...">
+    <p class="error-msg" id="error1">Sai rồi, thử lại nhé!</p>
+    <button class="btn-check" onclick="checkBox1()">Kiểm Tra</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal2">
+  <div class="modal-content">
+    <h2>Câu hỏi hộp 2</h2>
+    <p>Chồng em đẹp trai không?</p>
+    <button class="btn-option" onclick="answerBox2()">A. Đẹp Trai</button>
+    <button class="btn-option" onclick="answerBox2()">B. Rất Đẹp Trai</button>
+    <button class="btn-option" onclick="answerBox2()">C. Đẹp Trai Nhất Thế Giới</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal3">
+  <div class="modal-content">
+    <h2>Câu hỏi hộp 3</h2>
+    <p>Em muốn làm con dâu của má anh không?</p>
+    <input type="text" id="input3" placeholder="Điền vào...">
+    <p class="error-msg" id="error3">Trả lời lại đi nha!</p>
+    <button class="btn-check" onclick="checkBox3()">Trả Lời</button>
+  </div>
+</div>
+
+<!-- Màn hình Hộp 4 (Hiện chữ & Pháo hoa) -->
+<div id="box4Screen">
+  <canvas id="fireworksCanvas"></canvas>
+  <div id="box4Text"></div>
+</div>
+
+<!-- Thẻ nhạc nền -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+/* ================= JAVASCRIPT BẮT ĐẦU ================= */
+
+// 1. Trái tim bay nền
+const heartBg = document.getElementById('heartBg');
+setInterval(() => {
+  const h = document.createElement('div');
+  h.className = 'floating-heart';
+  const emojis = ['💖','💗','💕','💘','❤️','💝'];
+  h.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+  h.style.left = Math.random()*100+'%';
+  h.style.fontSize = (16+Math.random()*24)+'px';
+  h.style.animationDuration = (6+Math.random()*6)+'s';
+  heartBg.appendChild(h);
+  setTimeout(() => h.remove(), 12000);
+}, 500);
+
+// 2. Âm thanh
+const bgMusic = document.getElementById('bgMusic');
+// ⚠️ NẾU DÙNG LINK GITHUB, XÓA DẤU // Ở DÒNG DƯỚI VÀ DÁN LINK VÀO
+// bgMusic.src = "LINK_MP3_CUA_BAN";
+
+// 3. Logic Mở Hộp
+function openModal(id) {
+  document.getElementById(`modal${id}`).classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(`modal${id}`).classList.remove('active');
+}
+
+function unlockBox(id) {
+  const box = document.getElementById(`box${id}`);
+  box.classList.remove('locked');
+  box.classList.add('unlocked');
+  box.querySelector('.gift-icon').textContent = '🎁';
+  
+  // Sửa lỗi logic Hộp 4: Chuyển màn hình thay vì mở Modal
+  if (id === 4) {
+    box.onclick = () => {
+      document.getElementById('mainScreen').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('mainScreen').style.display = 'none';
+        document.getElementById('box4Screen').style.display = 'flex';
+        // Chỉ tạo nút 1 lần
+        if (!document.querySelector('.btn-start-box4')) {
+          const btn = document.createElement('button');
+          btn.className = 'btn-start-box4';
+          btn.textContent = 'Bấm Vào Đây';
+          btn.onclick = startBox4Sequence;
+          document.getElementById('box4Screen').appendChild(btn);
+        }
+        document.querySelector('.btn-start-box4').style.display = 'block';
+      }, 500);
+    };
+  } else {
+    box.onclick = () => openModal(id);
+  }
+}
+
+// === HỘP 1 ===
+function checkBox1() {
+  const val = document.getElementById('input1').value.trim().toLowerCase();
+  const err = document.getElementById('error1');
+  if (val === 'nhân' || val === 'nhan') {
+    err.style.display = 'none';
+    closeModal(1);
+    document.getElementById('box1').querySelector('.gift-icon').textContent = '✅';
+    document.getElementById('box1').onclick = null; 
+    setTimeout(() => unlockBox(2), 300);
+  } else {
+    err.style.display = 'block';
+  }
+}
+
+// === HỘP 2 ===
+function answerBox2() {
+  closeModal(2);
+  document.getElementById('box2').querySelector('.gift-icon').textContent = '✅';
+  document.getElementById('box2').onclick = null;
+  setTimeout(() => unlockBox(3), 300);
+}
+
+// === HỘP 3 ===
+function checkBox3() {
+  const val = document.getElementById('input3').value.trim().toLowerCase();
+  const err = document.getElementById('error3');
+  if (val === 'có' || val === 'co' || val.includes('có') || val.includes('muốn')) {
+    err.style.display = 'none';
+    closeModal(3);
+    document.getElementById('box3').querySelector('.gift-icon').textContent = '✅';
+    document.getElementById('box3').onclick = null;
+    setTimeout(() => unlockBox(4), 300);
+  } else {
+    err.style.display = 'block';
+  }
+      }
+  // 4. Kịch bản chữ Hộp 4
+  const box4TextEl = document.getElementById('box4Text');
+  const box4Script = [
+  { text: 'Em Là người phụ nữ tuyệt vời nhất thế giới này', duration: 5000 },
+  { text: 'Em đẹp hay xấu anh đều chấp nhận anh chỉ cần Em tử tế với anh thì anh sẽ chấp nhận tất cả', duration: 10000 },
+  { text: 'Anh chỉ mong thời gian trôi thật nhanh để anh có thể nói....', duration: 5000 },
+  { text: 'Làm Người Yêu Anh Nha♥️♥️♥️', duration: 5000 },
+  { text: 'Dù anh biết rằng chặn đường phía trước rất nhiều trở ngại nhưng....', duration: 5000 },
+  { text: 'Anh Sẽ cố gắng lấy được em....', duration: 5000 },
+  { text: 'Anh chỉ mong những ngày sắp tới chúng ta sẽ hạnh phúc không hiểu nhầm hay cãi lộn với nhau nữa', duration: 10000 },
+  { text: 'Anh thì còn nhỏ chưa hiểu nhiều về những lời lẽ đâu là vui đâu là buồn nên....', duration: 10000 },
+  { text: 'Nên em hãy thông cảm cho anh nhé ♥️', duration: 5000 },
+  { text: 'Và anh chỉ muốn nói là ANH YÊU EMMMM♥️', duration: 0 } 
+  ];
+  async function startBox4Sequence() {
+    document.querySelector('.btn-start-box4').style.display = 'none';
+    
+    // Phát nhạc từ lúc này
+    bgMusic.volume = 0.6;
+    bgMusic.play().catch(e => console.log("Lỗi nhạc:", e));
+
+    for (let i = 0; i < box4Script.length; i++) {
+      const item = box4Script[i];
+      
+      box4TextEl.textContent = item.text;
+      box4TextEl.classList.remove('show', 'final');
+      void box4TextEl.offsetWidth; 
+      box4TextEl.classList.add('show');
+
+      if (i === box4Script.length - 1) {
+        box4TextEl.classList.add('final');
+        triggerFireworks();
+        break; 
+      }
+
+      await new Promise(r => setTimeout(r, item.duration - 1000));
+      box4TextEl.classList.remove('show');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  // 5. Hiệu ứng pháo hoa
+  const canvas = document.getElementById('fireworksCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  class Particle {
+    constructor(x, y, color) {
+      this.x = x;
+      this.y = y;
+      this.color = color;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 6 + 2;
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.sin(angle) * speed;
+      this.alpha = 1;
+      this.decay = Math.random() * 0.02 + 0.015;
+      this.gravity = 0.05;
+      this.size = Math.random() * 3 + 1;
+      this.isHeart = Math.random() > 0.7; 
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.vy += this.gravity;
+      this.vx *= 0.98;
+      this.vy *= 0.98;
+      this.alpha -= this.decay;
+    }
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, this.alpha);
+      if (this.isHeart) {
+        ctx.fillStyle = '#ff4b8a';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ff4b8a';
+        const s = this.size / 3;
+        ctx.translate(this.x, this.y);
+        ctx.scale(s, s);
+        ctx.beginPath();
+        ctx.moveTo(0, 3);
+        ctx.bezierCurveTo(-5, -2, -5, -6, 0, -4);
+        ctx.bezierCurveTo(5, -6, 5, -2, 0, 3);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  function createFirework() {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * (canvas.height * 0.6);
+    const colors = ['#ff4b8a', '#ffd700', '#00d9ff', '#ff88bb', '#ffffff'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    for (let i = 0; i < 60; i++) {
+      particles.push(new Particle(x, y, color));
+    }
+  }
+
+  function animateFireworks() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.update();
+      p.draw();
+      if (p.alpha <= 0) particles.splice(i, 1);
+    }
+    requestAnimationFrame(animateFireworks);
+  }
+
+  function triggerFireworks() {
+    animateFireworks();
+    createFirework();
+    setInterval(() => {
+      createFirework();
+      if (Math.random() > 0.5) createFirework();
+    }, 600);
+  }
+</script>
+</body>
+</html>
